@@ -1,0 +1,65 @@
+name: Excel CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web application
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Build Windows desktop application
+        run: dotnet build src/windows -c Release
+
+      - name: Run Windows unit tests
+        run: dotnet test tests/windows
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build macOS application
+        run: xcodebuild -project src/macos/Excel.xcodeproj -scheme Excel -configuration Release
+
+      - name: Run macOS unit tests
+        run: xcodebuild test -project src/macos/Excel.xcodeproj -scheme Excel -destination 'platform=macOS'
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: 11
+          distribution: adopt
+
+      - name: Build Android application
+        run: ./gradlew assembleRelease
+
+      - name: Run Android unit tests
+        run: ./gradlew test
