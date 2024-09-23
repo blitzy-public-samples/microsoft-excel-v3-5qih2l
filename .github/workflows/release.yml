@@ -1,0 +1,120 @@
+name: Excel Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  build-and-release-web:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build web application
+        run: npm run build
+      - name: Create web artifact
+        run: zip -r excel-web.zip build/
+      - name: Upload web artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./excel-web.zip
+          asset_name: excel-web.zip
+          asset_content_type: application/zip
+
+  build-and-release-windows:
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+      - name: Build Windows desktop application
+        run: dotnet publish src/windows -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
+      - name: Create Windows artifact
+        run: Compress-Archive -Path publish/* -DestinationPath excel-windows.zip
+      - name: Upload Windows artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./excel-windows.zip
+          asset_name: excel-windows.zip
+          asset_content_type: application/zip
+
+  build-and-release-macos:
+    needs: create-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Build macOS application
+        run: xcodebuild -project src/macos/Excel.xcodeproj -scheme Excel -configuration Release -archivePath Excel.xcarchive archive
+      - name: Create macOS artifact
+        run: xcodebuild -exportArchive -archivePath Excel.xcarchive -exportOptionsPlist src/macos/ExportOptions.plist -exportPath .
+      - name: Upload macOS artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./Excel.app
+          asset_name: Excel-macOS.app
+          asset_content_type: application/octet-stream
+
+  build-and-release-android:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - name: Build Android application
+        run: ./gradlew assembleRelease
+      - name: Upload Android artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./app/build/outputs/apk/release/app-release.apk
+          asset_name: Excel-Android.apk
+          asset_content_type: application/vnd.android.package-archive
