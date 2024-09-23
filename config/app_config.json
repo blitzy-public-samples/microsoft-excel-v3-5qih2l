@@ -1,0 +1,58 @@
+{
+  "application": {
+    "name": "Microsoft Excel",
+    "version": "16.0.0",
+    "company": "Microsoft Corporation",
+    "copyright": "© 2023 Microsoft Corporation. All rights reserved."
+  },
+  "features": {
+    "maxWorksheets": 255,
+    "maxRows": 1048576,
+    "maxColumns": 16384,
+    "maxCellCharacters": 32767
+  },
+  "fileFormats": {
+    "supported": ["xlsx", "xls", "csv", "xml", "ods"],
+    "defaultSaveFormat": "xlsx"
+  },
+  "collaboration": {
+    "maxSimultaneousUsers": 100,
+    "realTimeSyncInterval": 500
+  },
+  "performance": {
+    "cellRenderBatchSize": 1000,
+    "formulaCalculationThreads": 4,
+    "maxMemoryUsage": "2GB"
+  },
+  "api": {
+    "baseUrl": "https://api.excel.microsoft.com/v1",
+    "maxRequestsPerMinute": 1000,
+    "timeout": 30000
+  },
+  "localization": {
+    "defaultLanguage": "en-US",
+    "supportedLanguages": ["en-US", "es-ES", "fr-FR", "de-DE", "ja-JP", "zh-CN"]
+  },
+  "security": {
+    "encryptionAlgorithm": "AES-256",
+    "passwordMinLength": 8,
+    "passwordRequiresSpecialChar": true,
+    "passwordRequiresNumber": true,
+    "passwordRequiresUppercase": true
+  },
+  "updates": {
+    "checkForUpdatesOnStartup": true,
+    "autoUpdateEnabled": true,
+    "updateServerUrl": "https://update.excel.microsoft.com"
+  },
+  "telemetry": {
+    "enabled": true,
+    "anonymizeData": true,
+    "telemetryServerUrl": "https://telemetry.excel.microsoft.com"
+  },
+  "debugging": {
+    "logLevel": "info",
+    "enableVerboseLogging": false,
+    "logFilePath": "./logs/excel.log"
+  }
+}
